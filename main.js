@@ -48,7 +48,9 @@ const firebaseConfig = {
     messagingSenderId: "565401637525",
     appId: "1:565401637525:web:67885ec130b03b55c7419c",
     measurementId: "G-4L16SGPB4X"
-  };
+
+};
+46ef13b (Add video with LFS)
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
