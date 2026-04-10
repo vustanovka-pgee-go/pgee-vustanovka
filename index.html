@@ -162,9 +162,10 @@ const map = L.map('map').setView([42.7, 25.3], 7);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 // Firebase (сложи си твоя config тук)
-const firebaseConfig = { 
+const firebaseConfig = {
   apiKey: "AIzaSyAW6tZDfcVLnZT6jVtnj0Ji0r5Nb7mLto8",
   authDomain: "pgee-bulgarian-cherry-cannon.firebaseapp.com",
+  databaseURL: "https://pgee-bulgarian-cherry-cannon-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "pgee-bulgarian-cherry-cannon",
   storageBucket: "pgee-bulgarian-cherry-cannon.firebasestorage.app",
   messagingSenderId: "565401637525",
