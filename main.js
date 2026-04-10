@@ -39,14 +39,14 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 /* ---------- FIREBASE CONFIG ---------- */
 const firebaseConfig = {
-    apiKey: "AIzaSyCxVXhOTV9RfmZlMEnqyda2peavgec27RU",
-    authDomain: "cherry-cannon.firebaseapp.com",
-    databaseURL: "https://cherry-cannon-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "cherry-cannon",
-    storageBucket: "cherry-cannon.firebasestorage.app",
-    messagingSenderId: "33268269491",
-    appId: "1:33268269491:web:e53b465f590d350a8bcbc6",
-    measurementId: "G-1480YS0HC3"
+    apiKey: "AIzaSyAW6tZDfcVLnZT6jVtnj0Ji0r5Nb7mLto8",
+    authDomain: "pgee-bulgarian-cherry-cannon.firebaseapp.com",
+    databaseURL: "https://pgee-bulgarian-cherry-cannon-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "pgee-bulgarian-cherry-cannon",
+    storageBucket: "pgee-bulgarian-cherry-cannon.firebasestorage.app",
+    messagingSenderId: "565401637525",
+    appId: "1:565401637525:web:67885ec130b03b55c7419c",
+    measurementId: "G-4L16SGPB4X"
 };
 
 firebase.initializeApp(firebaseConfig);
