@@ -50,7 +50,6 @@ const firebaseConfig = {
     measurementId: "G-4L16SGPB4X"
 
 };
-46ef13b (Add video with LFS)
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
