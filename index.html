@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Черешово топче – Интерактивен модел</title>
+
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        body { margin:0; background:#0b0b0b; color:white; font-family:system-ui; overflow-x: hidden; }
+        
+        /* ГЛАВНА СТРАНИЦА - АДАПТИВНОСТ */
+        #app { 
+            display: grid; 
+            grid-template-columns: 2fr 1fr; 
+            height: 100vh; 
+        }
+
+        @media (max-width: 900px) {
+            #app { grid-template-columns: 1fr; grid-template-rows: 50vh auto; height: auto; }
+            #panel { height: auto !important; border-left: none !important; border-top: 1px solid #333; }
+        }
+
+        model-viewer { width:100%; height:100%; background:#111; }
+        #panel { background:#151515; padding:20px; overflow-y: auto; box-sizing: border-box; }
+
+        /* СТРАНИЦА 2 - ВЪЗСТАНОВКИ */
+        #page2 { 
+            display: none; 
+            padding: 20px; 
+            background: #0b0b0b; 
+            min-height: 100vh; 
+            box-sizing: border-box; 
+        }
+
+        .recon-container { 
+            display: flex; 
+            gap: 20px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            flex-wrap: wrap; 
+        }
+
+        .video-box { 
+            flex: 2; 
+            min-width: 300px; 
+            position: relative;
+        }
+
+        /* Поправка за видеото на телефон */
+        video { 
+            width: 100%; 
+            border-radius: 12px; 
+            background: #000;
+            display: block;
+            max-height: 70vh;
+        }
+
+        .questions-sidebar { 
+            flex: 1; 
+            min-width: 280px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+
+        .q-card { 
+            background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #333; 
+            cursor: pointer; transition: 0.2s; 
+        }
+        .q-card:active { transform: scale(0.98); } /* Ефект при натискане на телефон */
+        .q-card h4 { margin: 0 0 5px 0; color: #ff9800; font-size: 1.1rem; }
+        .q-card p { margin: 0; font-size: 0.85rem; color: #aaa; }
+
+        /* БУТОН ЗА НАВИГАЦИЯ */
+        .nav-btn {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;
+            background: #ff9800; color: black; border: none; padding: 14px 28px;
+            font-weight: bold; border-radius: 30px; cursor: pointer; white-space: nowrap;
+        }
+
+        #map { height:250px; margin-top:20px; border-radius:10px; }
+        .hotspot { width:16px; height:16px; background:#ff9800; border-radius:50%; border:none; }
+        
+        #liveCounter {
+            position:fixed; top:10px; right:10px; display:flex; align-items:center; gap:8px;
+            font-size:18px; color:white; background:rgba(0,0,0,0.6); padding:5px 12px; border-radius:20px; z-index:999;
+        }
+    </style>
+</head>
+<body>
+
+<div id="liveCounter"><i class="fa-regular fa-user"></i> <span id="onlineCount">0</span></div>
+
+<button class="nav-btn" id="togglePageBtn" onclick="togglePages()">🎬 Към Възстановки</button>
+
+<div id="app">
+    <model-viewer id="mainModel" src="Meshy_AI_Bulgarian_cherry_cann_0205155740_texture.glb" camera-controls auto-rotate shadow-intensity="1">
+        <button class="hotspot" slot="hotspot-1" data-position="0.2m 0.1m 0.1m" data-normal="0 1 0" onclick="selectPart('barrel')"></button>
+        <button class="hotspot" slot="hotspot-2" data-position="-0.2m 0.05m 0" data-normal="0 1 0" onclick="selectPart('bands')"></button>
+    </model-viewer>
+
+    <div id="panel">
+        <h2 id="title">Избери част</h2>
+        <p id="text">Кликни върху точките на модела.</p>
+        <div id="media"></div>
+        <h3>🌍 Посетители на сайта</h3>
+        <div id="map"></div>
+    </div>
+</div>
+
+<div id="page2">
+    <h2 style="text-align:center; color:#ff9800;">Исторически Възстановки</h2>
+    <div class="recon-container">
+        <div class="video-box">
+            <video id="reconVideo" muted playsinline preload="auto">
+                <source src="Comp1.mp4" type="video/mp4">
+            </video>
+            <div style="margin-top:10px; display:flex; gap:10px;">
+                <button onclick="manualPlay()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:5px;">▶ Пусни</button>
+                <button onclick="manualPause()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:5px;">⏸ Пауза</button>
+            </div>
+        </div>
+
+        <div class="questions-sidebar">
+            <div class="q-card" onclick="playAudioResponse('25yearGeorgi.mp3')">
+                <h4>Кой е изработил първото топче?</h4>
+                <p>Кликни за отговор</p>
+            </div>
+            <div class="q-card" onclick="playAudioResponse('audio2.mp3')">
+                <h4>Колко е бил обсегът му?</h4>
+                <p>Кликни за отговор</p>
+            </div>
+        </div>
+    </div>
+    <audio id="reconAudio" playsinline></audio>
+</div>
+
+<script>
+/* ТВОИТЕ ДАННИ И FIREBASE (ЗАПАЗЕНИ) */
+const data = {
+    barrel: { title: "Дървена цев", text: "Издълбана от масивно черешово дърво.", video: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+    bands: { title: "Железни обръчи", text: "Металните обръчи намаляват риска от разцепване." }
+};
+
+function selectPart(key) {
+    const part = data[key];
+    document.getElementById("title").innerText = part.title;
+    document.getElementById("text").innerText = part.text;
+    const media = document.getElementById("media");
+    media.innerHTML = part.video ? `<iframe width="100%" height="220" src="${part.video}" allowfullscreen></iframe>` : "";
+}
+
+// Карта
+const map = L.map('map').setView([42.7, 25.3], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// Firebase (сложи си твоя config тук)
+const firebaseConfig = { 
+  apiKey: "AIzaSyAW6tZDfcVLnZT6jVtnj0Ji0r5Nb7mLto8",
+  authDomain: "pgee-bulgarian-cherry-cannon.firebaseapp.com",
+  projectId: "pgee-bulgarian-cherry-cannon",
+  storageBucket: "pgee-bulgarian-cherry-cannon.firebasestorage.app",
+  messagingSenderId: "565401637525",
+  appId: "1:565401637525:web:67885ec130b03b55c7419c",
+  measurementId: "G-4L16SGPB4X"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Локация
+fetch("https://ipapi.co/json/").then(res => res.json()).then(d => {
+    const userRef = db.ref("visitors").push();
+    userRef.set({ lat: d.latitude, lon: d.longitude });
+    userRef.onDisconnect().remove();
+});
+
+// Маркери
+const markers = [];
+db.ref("visitors").on("value", snap => {
+    document.getElementById("onlineCount").innerText = snap.numChildren();
+    markers.forEach(m => map.removeLayer(m));
+    snap.forEach(child => {
+        const v = child.val();
+        const m = L.circleMarker([v.lat, v.lon], { radius: 6, color: "#ff9800" }).addTo(map);
+        markers.push(m);
+    });
+});
+
+/* ЛОГИКА ЗА СТРАНИЦА 2 */
+let isPage2 = false;
+
+function togglePages() {
+    const p1 = document.getElementById('app');
+    const p2 = document.getElementById('page2');
+    const btn = document.getElementById('togglePageBtn');
+    
+    if (!isPage2) {
+        p1.style.display = 'none';
+        p2.style.display = 'block';
+        btn.innerText = '⬅ Назад';
+        window.scrollTo(0,0);
+    } else {
+        p1.style.display = 'grid';
+        p2.style.display = 'none';
+        btn.innerText = '🎬 Към Възстановки';
+        document.getElementById('reconVideo').pause();
+        document.getElementById('reconAudio').pause();
+    }
+    isPage2 = !isPage2;
+}
+
+function playAudioResponse(file) {
+    const audio = document.getElementById('reconAudio');
+    const video = document.getElementById('reconVideo');
+    
+    audio.src = file;
+    video.currentTime = 0;
+    
+    // Мобилен фикс: Трябва първо да пуснем аудиото, после видеото
+    audio.play().then(() => {
+        video.play();
+    }).catch(err => console.log("Браузърът блокира звука: ", err));
+
+    audio.onended = () => video.pause();
+}
+
+function manualPlay() { document.getElementById('reconVideo').play(); }
+function manualPause() { document.getElementById('reconVideo').pause(); document.getElementById('reconAudio').pause(); }
+</script>
+
+</body>
+</html>
