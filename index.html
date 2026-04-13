@@ -15,7 +15,6 @@
     <style>
         body { margin:0; background:#0b0b0b; color:white; font-family:system-ui; overflow-x: hidden; }
         
-        /* ГЛАВНА СТРАНИЦА - АДАПТИВНОСТ */
         #app { 
             display: grid; 
             grid-template-columns: 2fr 1fr; 
@@ -30,7 +29,6 @@
         model-viewer { width:100%; height:100%; background:#111; }
         #panel { background:#151515; padding:20px; overflow-y: auto; box-sizing: border-box; }
 
-        /* СТРАНИЦА 2 - ВЪЗСТАНОВКИ */
         #page2 { 
             display: none; 
             padding: 20px; 
@@ -51,15 +49,16 @@
             flex: 2; 
             min-width: 300px; 
             position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
-        /* Поправка за видеото на телефон */
-        video { 
+        video#reconVideo { 
             width: 100%; 
-            border-radius: 12px; 
-            background: #000;
             display: block;
-            max-height: 70vh;
+            pointer-events: none;
+            outline: none;
         }
 
         .questions-sidebar { 
@@ -74,11 +73,10 @@
             background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #333; 
             cursor: pointer; transition: 0.2s; 
         }
-        .q-card:active { transform: scale(0.98); } /* Ефект при натискане на телефон */
+        .q-card:active { transform: scale(0.98); }
         .q-card h4 { margin: 0 0 5px 0; color: #ff9800; font-size: 1.1rem; }
         .q-card p { margin: 0; font-size: 0.85rem; color: #aaa; }
 
-        /* БУТОН ЗА НАВИГАЦИЯ */
         .nav-btn {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;
             background: #ff9800; color: black; border: none; padding: 14px 28px;
@@ -119,12 +117,12 @@
     <h2 style="text-align:center; color:#ff9800;">Исторически Възстановки</h2>
     <div class="recon-container">
         <div class="video-box">
-            <video controls>
-            <source src="https://drive.google.com/file/d/1_Kesgklayz1cT7jqVtmOn01PjkicpSAO/view?usp=drive_link" type="video/mp4">
-          </video>
+            <video id="reconVideo" playsinline preload="auto" muted>
+                <source src="Comp-1.mp4" type="video/mp4">
+            </video>
             <div style="margin-top:10px; display:flex; gap:10px;">
-                <button onclick="manualPlay()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:5px;">▶ Пусни</button>
-                <button onclick="manualPause()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:5px;">⏸ Пауза</button>
+                <button onclick="manualPlay()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer;">▶ Пусни</button>
+                <button onclick="manualPause()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer;">⏸ Пауза</button>
             </div>
         </div>
 
@@ -139,11 +137,10 @@
             </div>
         </div>
     </div>
-    <audio id="reconAudio" playsinline></audio>
+    <audio id="reconAudio" playsinline preload="auto"></audio>
 </div>
 
 <script>
-/* ТВОИТЕ ДАННИ И FIREBASE (ЗАПАЗЕНИ) */
 const data = {
     barrel: { title: "Дървена цев", text: "Издълбана от масивно черешово дърво.", video: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
     bands: { title: "Железни обръчи", text: "Металните обръчи намаляват риска от разцепване." }
@@ -157,11 +154,9 @@ function selectPart(key) {
     media.innerHTML = part.video ? `<iframe width="100%" height="220" src="${part.video}" allowfullscreen></iframe>` : "";
 }
 
-// Карта
 const map = L.map('map').setView([42.7, 25.3], 7);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// Firebase (сложи си твоя config тук)
 const firebaseConfig = {
   apiKey: "AIzaSyAW6tZDfcVLnZT6jVtnj0Ji0r5Nb7mLto8",
   authDomain: "pgee-bulgarian-cherry-cannon.firebaseapp.com",
@@ -175,14 +170,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Локация
 fetch("https://ipapi.co/json/").then(res => res.json()).then(d => {
     const userRef = db.ref("visitors").push();
     userRef.set({ lat: d.latitude, lon: d.longitude });
     userRef.onDisconnect().remove();
 });
 
-// Маркери
 const markers = [];
 db.ref("visitors").on("value", snap => {
     document.getElementById("onlineCount").innerText = snap.numChildren();
@@ -194,14 +187,12 @@ db.ref("visitors").on("value", snap => {
     });
 });
 
-/* ЛОГИКА ЗА СТРАНИЦА 2 */
 let isPage2 = false;
 
 function togglePages() {
     const p1 = document.getElementById('app');
     const p2 = document.getElementById('page2');
     const btn = document.getElementById('togglePageBtn');
-    
     if (!isPage2) {
         p1.style.display = 'none';
         p2.style.display = 'block';
@@ -211,29 +202,44 @@ function togglePages() {
         p1.style.display = 'grid';
         p2.style.display = 'none';
         btn.innerText = '🎬 Към Възстановки';
-        document.getElementById('reconVideo').pause();
-        document.getElementById('reconAudio').pause();
+        manualPause();
     }
     isPage2 = !isPage2;
 }
 
-function playAudioResponse(file) {
-    const audio = document.getElementById('reconAudio');
-    const video = document.getElementById('reconVideo');
-    
-    audio.src = file;
-    video.currentTime = 0;
-    
-    // Мобилен фикс: Трябва първо да пуснем аудиото, после видеото
-    audio.play().then(() => {
-        video.play();
-    }).catch(err => console.log("Браузърът блокира звука: ", err));
+const video = document.getElementById('reconVideo');
+const audio = document.getElementById('reconAudio');
+let audioDelayTimer; 
 
-    audio.onended = () => video.pause();
+function playAudioResponse(file) {
+    clearTimeout(audioDelayTimer);
+    audio.pause();
+    video.pause();
+    video.currentTime = 0;
+
+    // Видеото тръгва веднага
+    video.play().catch(e => console.log("Video error:", e));
+
+    // Аудиото чака 1000мс (1 сек)
+    audio.src = file;
+    audio.currentTime = 0;
+    audioDelayTimer = setTimeout(() => {
+        audio.play().catch(e => console.log("Audio error:", e));
+    }, 1000); 
 }
 
-function manualPlay() { document.getElementById('reconVideo').play(); }
-function manualPause() { document.getElementById('reconVideo').pause(); document.getElementById('reconAudio').pause(); }
+function manualPlay() { 
+    clearTimeout(audioDelayTimer);
+    video.play(); 
+}
+
+function manualPause() { 
+    clearTimeout(audioDelayTimer);
+    video.pause(); 
+    audio.pause(); 
+}
+
+audio.onended = () => { video.pause(); };
 </script>
 
 </body>
