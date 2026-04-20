@@ -14,88 +14,52 @@
 
     <style>
         body { margin:0; background:#0b0b0b; color:white; font-family:system-ui; overflow-x: hidden; }
-        
-        #app { 
-            display: grid; 
-            grid-template-columns: 2fr 1fr; 
-            height: 100vh; 
-        }
+        #app { display: grid; grid-template-columns: 2fr 1fr; height: 100vh; }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
+            .video-item { flex-direction: column !important; }
+            .questions-side { width: 100% !important; }
             #app { grid-template-columns: 1fr; grid-template-rows: 50vh auto; height: auto; }
-            #panel { height: auto !important; border-left: none !important; border-top: 1px solid #333; }
         }
 
         model-viewer { width:100%; height:100%; background:#111; }
         #panel { background:#151515; padding:20px; overflow-y: auto; box-sizing: border-box; }
+        #page2 { display: none; padding: 40px 20px 100px 20px; background: #0b0b0b; min-height: 100vh; }
 
-        #page2 { 
-            display: none; 
-            padding: 20px; 
-            background: #0b0b0b; 
-            min-height: 100vh; 
-            box-sizing: border-box; 
+        .video-list { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 60px; }
+        .video-item { 
+            display: flex; gap: 30px; background: #1a1a1a; padding: 25px; 
+            border-radius: 20px; border: 1px solid #333; align-items: center;
         }
 
-        .recon-container { 
-            display: flex; 
-            gap: 20px; 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            flex-wrap: wrap; 
-        }
+        .video-content { flex: 1.8; min-width: 300px; }
+        .questions-side { flex: 1.2; min-width: 300px; display: flex; flex-direction: column; gap: 15px; }
 
-        .video-box { 
-            flex: 2; 
-            min-width: 300px; 
-            position: relative;
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        video#reconVideo { 
-            width: 100%; 
-            display: block;
-            pointer-events: none;
-            outline: none;
-        }
-
-        .questions-sidebar { 
-            flex: 1; 
-            min-width: 280px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-        }
+        .video-item h3 { color: #ff9800; margin-top: 0; margin-bottom: 20px; font-size: 1.4rem; text-align: center; }
+        .video-wrapper { position: relative; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        video { width: 100%; display: block; pointer-events: none; }
 
         .q-card { 
-            background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #333; 
-            cursor: pointer; transition: 0.2s; 
+            background: #252525; padding: 18px; border-radius: 12px; cursor: pointer; 
+            transition: 0.3s; border: 1px solid #333; display: flex; align-items: center; gap: 15px;
         }
-        .q-card:active { transform: scale(0.98); }
-        .q-card h4 { margin: 0 0 5px 0; color: #ff9800; font-size: 1.1rem; }
-        .q-card p { margin: 0; font-size: 0.85rem; color: #aaa; }
+        .q-card:hover { background: #333; border-color: #ff9800; transform: translateX(8px); }
+        .q-card i { color: #ff9800; font-size: 1.2rem; }
+        .q-card span { font-size: 1rem; font-weight: 500; }
 
         .nav-btn {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;
             background: #ff9800; color: black; border: none; padding: 14px 28px;
-            font-weight: bold; border-radius: 30px; cursor: pointer; white-space: nowrap;
+            font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
 
-        #map { height:250px; margin-top:20px; border-radius:10px; }
+        #liveCounter { position:fixed; top:10px; right:10px; z-index:999; background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px; }
         .hotspot { width:16px; height:16px; background:#ff9800; border-radius:50%; border:none; }
-        
-        #liveCounter {
-            position:fixed; top:10px; right:10px; display:flex; align-items:center; gap:8px;
-            font-size:18px; color:white; background:rgba(0,0,0,0.6); padding:5px 12px; border-radius:20px; z-index:999;
-        }
     </style>
 </head>
 <body>
 
 <div id="liveCounter"><i class="fa-regular fa-user"></i> <span id="onlineCount">0</span></div>
-
 <button class="nav-btn" id="togglePageBtn" onclick="togglePages()">🎬 Към Възстановки</button>
 
 <div id="app">
@@ -103,57 +67,148 @@
         <button class="hotspot" slot="hotspot-1" data-position="0.2m 0.1m 0.1m" data-normal="0 1 0" onclick="selectPart('barrel')"></button>
         <button class="hotspot" slot="hotspot-2" data-position="-0.2m 0.05m 0" data-normal="0 1 0" onclick="selectPart('bands')"></button>
     </model-viewer>
-
     <div id="panel">
         <h2 id="title">Избери част</h2>
-        <p id="text">Кликни върху точките на модела.</p>
+        <p id="text">Кликни върху точките на модела за детайли.</p>
         <div id="media"></div>
-        <h3>🌍 Посетители на сайта</h3>
-        <div id="map"></div>
+        <div id="map" style="height:250px; margin-top:20px; border-radius:10px;"></div>
     </div>
 </div>
 
 <div id="page2">
-    <h2 style="text-align:center; color:#ff9800;">Исторически Възстановки</h2>
-    <div class="recon-container">
-        <div class="video-box">
-            <video id="reconVideo" playsinline preload="auto" muted>
-                <source src="https://media.githubusercontent.com/media/vustanovka-pgee-go/pgee-vustanovka/main/Comp-1.mp4" type="video/mp4">
-            </video>
-            <div style="margin-top:10px; display:flex; gap:10px;">
-                <button onclick="manualPlay()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer;">▶ Пусни</button>
-                <button onclick="manualPause()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer;">⏸ Пауза</button>
+    <h2 style="text-align:center; color:#ff9800; margin-bottom:50px; font-size: 2rem;">Интерактивни Възстановки</h2>
+    
+    <div class="video-list">
+        
+        <div class="video-item">
+            <div class="video-content">
+                <h3>Производство на топчето</h3>
+                <div class="video-wrapper">
+                    <video id="vid1" playsinline muted>
+                        <source src="https://media.githubusercontent.com/media/vustanovka-pgee-go/pgee-vustanovka/main/Comp-1.mp4" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+            <div class="questions-side">
+                <div class="q-card" onclick="playBoth('vid1', '25yearGeorgi.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Кой измисли топчето?</span>
+                </div>
+                <div class="q-card" onclick="playBoth('vid1', 'audio1_2.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Как се копае цевта?</span>
+                </div>
+                <div class="q-card" onclick="playBoth('vid1', 'audio1_3.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Колко топчета са направени?</span>
+                </div>
             </div>
         </div>
 
-        <div class="questions-sidebar">
-            <div class="q-card" onclick="playAudioResponse('25yearGeorgi.mp3')">
-                <h4>Кой е изработил първото топче?</h4>
-                <p>Кликни за отговор</p>
+        <div class="video-item">
+            <div class="video-content">
+                <h3>Технически характеристики</h3>
+                <div class="video-wrapper">
+                    <video id="vid2" playsinline muted>
+                        <source src="https://media.githubusercontent.com/media/vustanovka-pgee-go/pgee-vustanovka/main/Comp-2.mp4" type="video/mp4">
+                    </video>
+                </div>
             </div>
-            <div class="q-card" onclick="playAudioResponse('audio2.mp3')">
-                <h4>Колко е бил обсегът му?</h4>
-                <p>Кликни за отговор</p>
+            <div class="questions-side">
+                <div class="q-card" onclick="playBoth('vid2', 'audio2_1.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Колко далеч стреля?</span>
+                </div>
+                <div class="q-card" onclick="playBoth('vid2', 'audio2_2.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Защо гърмят често?</span>
+                </div>
+                <div class="q-card" onclick="playBoth('vid2', 'audio2_3.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Какви са били снарядите?</span>
+                </div>
             </div>
         </div>
+
+        <div class="video-item">
+            <div class="video-content">
+                <h3>Боен път и подготовка</h3>
+                <div class="video-wrapper">
+                    <video id="vid3" playsinline muted>
+                        <source src="https://media.githubusercontent.com/media/vustanovka-pgee-go/pgee-vustanovka/main/Comp-3.mp4" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+            <div class="questions-side">
+                <div class="q-card" onclick="playBoth('vid3', 'audio3_1.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Как се прави барутът?</span>
+                </div>
+                <div class="q-card" onclick="playBoth('vid3', 'audio3_2.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Къде е първата битка?</span>
+                </div>
+                <div class="q-card" onclick="playBoth('vid3', 'audio3_3.mp3')">
+                    <i class="fa-solid fa-volume-high"></i><span>Как са го пренасяли?</span>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <audio id="reconAudio" playsinline preload="auto"></audio>
+    <audio id="globalAudio"></audio>
 </div>
 
 <script>
+// Интерактивност на модела
 const data = {
-    barrel: { title: "Дървена цев", text: "Издълбана от масивно черешово дърво.", video: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+    barrel: { title: "Дървена цев", text: "Издълбана от масивно черешово дърво." },
     bands: { title: "Железни обръчи", text: "Металните обръчи намаляват риска от разцепване." }
 };
-
 function selectPart(key) {
-    const part = data[key];
-    document.getElementById("title").innerText = part.title;
-    document.getElementById("text").innerText = part.text;
-    const media = document.getElementById("media");
-    media.innerHTML = part.video ? `<iframe width="100%" height="220" src="${part.video}" allowfullscreen></iframe>` : "";
+    document.getElementById("title").innerText = data[key].title;
+    document.getElementById("text").innerText = data[key].text;
 }
 
+// Смяна на страници
+let isPage2 = false;
+function togglePages() {
+    const p1 = document.getElementById('app');
+    const p2 = document.getElementById('page2');
+    const btn = document.getElementById('togglePageBtn');
+    stopAllVideos();
+    if (!isPage2) {
+        p1.style.display = 'none'; p2.style.display = 'block';
+        btn.innerText = '⬅ Назад';
+    } else {
+        p1.style.display = 'grid'; p2.style.display = 'none';
+        btn.innerText = '🎬 Към Възстановки';
+    }
+    isPage2 = !isPage2;
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// Логика за синхронизирано видео и аудио
+const globalAudio = document.getElementById('globalAudio');
+let audioTimer;
+
+function playBoth(videoId, audioFile) {
+    stopAllVideos(); 
+    const video = document.getElementById(videoId);
+    
+    globalAudio.src = audioFile;
+    video.currentTime = 0; // Връщаме видеото в началото при нов въпрос
+    video.play();
+    
+    audioTimer = setTimeout(() => {
+        globalAudio.play().catch(e => console.log("Audio waiting for interaction"));
+    }, 500);
+
+    globalAudio.onended = () => { 
+        video.pause(); 
+    };
+}
+
+function stopAllVideos() {
+    clearTimeout(audioTimer);
+    globalAudio.pause();
+    document.querySelectorAll('video').forEach(v => { 
+        v.pause(); 
+    });
+}
+
+// Карта и Firebase
 const map = L.map('map').setView([42.7, 25.3], 7);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -164,82 +219,13 @@ const firebaseConfig = {
   projectId: "pgee-bulgarian-cherry-cannon",
   storageBucket: "pgee-bulgarian-cherry-cannon.firebasestorage.app",
   messagingSenderId: "565401637525",
-  appId: "1:565401637525:web:67885ec130b03b55c7419c",
-  measurementId: "G-4L16SGPB4X"
+  appId: "1:565401637525:web:67885ec130b03b55c7419c"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-fetch("https://ipapi.co/json/").then(res => res.json()).then(d => {
-    const userRef = db.ref("visitors").push();
-    userRef.set({ lat: d.latitude, lon: d.longitude });
-    userRef.onDisconnect().remove();
-});
-
-const markers = [];
 db.ref("visitors").on("value", snap => {
     document.getElementById("onlineCount").innerText = snap.numChildren();
-    markers.forEach(m => map.removeLayer(m));
-    snap.forEach(child => {
-        const v = child.val();
-        const m = L.circleMarker([v.lat, v.lon], { radius: 6, color: "#ff9800" }).addTo(map);
-        markers.push(m);
-    });
 });
-
-let isPage2 = false;
-
-function togglePages() {
-    const p1 = document.getElementById('app');
-    const p2 = document.getElementById('page2');
-    const btn = document.getElementById('togglePageBtn');
-    if (!isPage2) {
-        p1.style.display = 'none';
-        p2.style.display = 'block';
-        btn.innerText = '⬅ Назад';
-        window.scrollTo(0,0);
-    } else {
-        p1.style.display = 'grid';
-        p2.style.display = 'none';
-        btn.innerText = '🎬 Към Възстановки';
-        manualPause();
-    }
-    isPage2 = !isPage2;
-}
-
-const video = document.getElementById('reconVideo');
-const audio = document.getElementById('reconAudio');
-let audioDelayTimer; 
-
-function playAudioResponse(file) {
-    clearTimeout(audioDelayTimer);
-    audio.pause();
-    video.pause();
-    video.currentTime = 0;
-
-    // Видеото тръгва веднага
-    video.play().catch(e => console.log("Video error:", e));
-
-    // Аудиото чака 1000мс (1 сек)
-    audio.src = file;
-    audio.currentTime = 0;
-    audioDelayTimer = setTimeout(() => {
-        audio.play().catch(e => console.log("Audio error:", e));
-    }, 1000); 
-}
-
-function manualPlay() { 
-    clearTimeout(audioDelayTimer);
-    video.play(); 
-}
-
-function manualPause() { 
-    clearTimeout(audioDelayTimer);
-    video.pause(); 
-    audio.pause(); 
-}
-
-audio.onended = () => { video.pause(); };
 </script>
 
 </body>
